@@ -28,10 +28,26 @@
             elb_name: "{{ elbinfo.elbs[0].dns_name }}"
           when: vpc_id == elbinfo.elbs[0].vpc_id and cluster_name in elb_tags[0] and 'service' in elb_tags[1]
 
-
+    - name: openshift-ingress | Wait for operators
+      k8s_info:
+        api-version: v1
+        kind: Service
+        name: router-default
+        namespace: openshift-ingress-operator
+      register: ingress
+      until: ingress.rc == 0
+      retries: 10
+      delay: 30
+        
     - name: openshift-ingress | Terraformify
       block:
-        - name: openshift-ingress | Terraform Init ingress module
+        - name: openshift-ingress | Create Terraform Configuration for openshift-ingress
+          template:
+            src: ./ingress.tf.j2
+            dest: "{{ terraform_dir }}/route53"
+
+
+        - name: openshift-ingress | Deploy openshift-ingress via terraform
           terraform:
-            project_path: 
-            force_init: true
+            project_path: "{{ terraform_dir }}/route53/"
+            state: present
