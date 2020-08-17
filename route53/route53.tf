@@ -11,7 +11,6 @@ resource "aws_route53_record" "api" {
   type = "CNAME"
   zone_id = data.aws_route53_zone.private_zone.id
   records = [data.terraform_remote_state.elb.outputs.control_plane_int]
-  //records = [data.aws_lb.control_plane_int.dns_name]
   ttl = 300
 }
 
@@ -33,7 +32,6 @@ resource "aws_route53_record" "etcd_a_nodes" {
   type    = "A"
   ttl     = "60"
   allow_overwrite = true
-//change lookup to private_zone - jrickard
   zone_id = data.aws_route53_zone.private_zone.id
   name    = "etcd-${count.index}.${var.cluster_domain }"
   records = ["${data.terraform_remote_state.control-plane.outputs.master_private_ips[count.index]}"]
